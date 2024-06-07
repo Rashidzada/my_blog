@@ -6,7 +6,8 @@ from django.contrib import messages
 from django.contrib.auth.models import User
 # Create your views here.
 def index(request):
-    blog = BlogPost.objects.all()
+
+    blog = BlogPost.objects.filter(status = 'accepted')
     context = {
         'blogs':blog
     }
@@ -14,8 +15,12 @@ def index(request):
 
 @login_required(login_url='login_view')
 def dashboard(request):
-    
-    return render(request,'dashboard.html',{'user_profile':UserProfile.objects.get(user = request.user)})
+    user_posts = BlogPost.objects.filter(author = request.user).order_by('-id')
+    context = {
+        'posts':user_posts,
+        'user_profile':UserProfile.objects.get(user = request.user)
+    }
+    return render(request,'dashboard.html',context)
 
 
 def login_view(request):
@@ -50,7 +55,7 @@ def signup_view(request):
                 messages.success(request,f'Congrats You are registerd Scuccesfully: username:{username} - password:{password}')
                 user = authenticate(request, username = username,password = password)
                 login(request,user)
-                return redirect('dashboard')
+                return redirect('edit_profile')
 
         else:
             messages.warning(request,'passwrod not matched')
@@ -61,13 +66,21 @@ def signup_view(request):
 
 
 def blog(request):
-    blog = BlogPost.objects.all()
-    context = {
-        'blogs':blog
-    }
-    return render(request,'blog.html',context)
+    query = request.POST.get('q')
+    if query:
+        posts = BlogPost.objects.filter(title__icontains=query)
+    else:
+        posts = BlogPost.objects.filter(status = 'accepted').order_by('-id')
+    
+    context = {'posts': posts, 'query': query}
+    return render(request, 'blog.html', context)
+
 
 def contact(request):
+    if request.method == 'POST':
+        Contact.objects.create(name = request.POST['name'],email = request.POST['email'],subject = request.POST['subject'],message = request.POST['message'])
+        messages.success(request,'Thank You to contact us we soon will be responsed .')
+        return redirect('index')
     return render(request,'contact.html')
 
 
@@ -77,7 +90,7 @@ def logout_view(request):
 
 
 
-@login_required
+@login_required(login_url='login_view')
 def edit_profile(request):
     user_profile = UserProfile.objects.get(user = request.user)
     if request.method == 'POST':
@@ -89,3 +102,50 @@ def edit_profile(request):
         return redirect('dashboard')  # Redirect to dashboard after saving
 
     return render(request, 'edit_profile.html', {'user_profile': user_profile})
+
+
+def create_post(request):
+    if request.method == "POST":
+        title = request.POST['title']
+        content = request.POST['content']
+        image = request.FILES['image']
+        youtube_link = request.POST['youtube_link']
+        BlogPost.objects.create(author = request.user ,title = title , content = content , image = image,youtube_link = youtube_link)
+        messages.success(request,'Your Post Created Successfully')
+        return redirect('dashboard')
+    return render(request,'create_post.html')
+
+def view_post(request,post_id):
+    post = BlogPost.objects.get(id = post_id)
+    user_profile = UserProfile.objects.get(user = post.author)
+
+    context = {
+        'post':post,
+        'user_profile':user_profile,
+    }
+    return render(request,'view_post.html',context)
+
+def edit_post(request,post_id):
+    post = BlogPost.objects.get(id = post_id)
+    if request.method == "POST":
+        post.title = request.POST.get('title','')
+        post.content = request.POST.get('content','')
+        image = request.FILES.get('image','')
+        post.youtube_link = request.POST.get('youtube_link','')
+        if image:
+            post.image = image
+        post.save()
+        messages.success(request,'Your Post Updated Successfully')
+        return redirect('dashboard')
+    
+    return render(request,'edit_post.html',{'post':post})
+
+
+def delete_post(request,post_id):
+    post = BlogPost.objects.get(id = post_id)
+    if request.method == 'POST':
+        post.delete()
+        messages.success(request,'Your Post Deleted Successfully')
+        return redirect('dashboard')
+        
+    return render(request,'delete_post.html',{'post':BlogPost.objects.get(title = post.title)})

@@ -14,11 +14,11 @@
     </style>
 </head>
 <body class="bg-gray-100">
-    {% for message in messages%}
+    {% for message in messages %}
     <script>
-        alert('{{message}}');
+        alert('{{ message }}');
     </script>
-    {%endfor%}
+    {% endfor %}
     <!-- Dashboard Layout -->
     <div class="container mx-auto mt-8">
 
@@ -27,8 +27,9 @@
             <div class="container mx-auto px-4 py-3 flex justify-between items-center">
                 <a href="/" class="text-lg font-semibold text-gray-700">Home</a>
                 <div>
-                    <a href="{% url 'edit_profile'%}" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">Edit Profile</a>
-                    <a href="{% url 'logout_view'%}" class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600">Logout</a>
+                    <a href="{% url 'edit_profile' %}" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">Edit Profile</a>
+                    <a href="{% url 'logout_view' %}" class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600">Logout</a>
+                    <a href="{% url 'create_post' %}" class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600">Create Post +</a>
                 </div>
             </div>
         </nav>
@@ -36,12 +37,14 @@
         <!-- User Information -->
         <div class="bg-white p-6 rounded-lg shadow-lg mb-8 flex items-center">
             {% if user_profile.profile_pic %}
-            <img src="{{user_profile.profile_pic.url}}" alt="Profile Image" class="w-16 h-16 rounded-full mr-4">
-            {%endif%}
+            <img src="{{ user_profile.profile_pic.url }}" alt="Profile Image" class="w-16 h-16 rounded-full mr-4">
+            {% endif %}
             <div>
-                <h1 class="text-3xl font-bold">{{user.username}}</h1>
-                <p class="text-gray-500">{{user.email}}</p>
-                <p>{{user.userprofile.bio}}</p>
+                <h1 class="text-3xl font-bold">{{ user.username }}</h1>
+                <p class="text-gray-500">{{ user.email }}</p>
+                {% if user_profile.bio %}
+                <p>{{ user_profile.bio }}</p>
+                {%endif%}
             </div>
         </div>
 
@@ -66,16 +69,43 @@
                             <th class="px-4 py-2">Title</th>
                             <th class="px-4 py-2">Content</th>
                             <th class="px-4 py-2">Date</th>
+                            <th class="px-4 py-2">Action</th>
+                            <th class="px-4 py-2">Status</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <td class="border px-4 py-2">1</td>
-                            <td class="border px-4 py-2">Post Title 1</td>
-                            <td class="border px-4 py-2">This is the content of post 1.</td>
-                            <td class="border px-4 py-2">2024-06-05</td>
+                       {% if posts %}
+                       {% for post in posts %}
+                       <tr>
+                            <td class="border px-4 py-2">{{ post.id }}</td>
+                            <td class="border px-4 py-2">{{ post.title }}</td>
+                            <td class="border px-4 py-2">{{ post.content }}</td>
+                            <td class="border px-4 py-2">{{ post.created_at }}</td>
+                            <td class="border px-4 py-2">
+                                <div class="flex space-x-2">
+                                    <a href="{% url 'edit_post' post.pk %}" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">Edit</a>
+                                    <a href="{% url 'view_post' post.pk %}" class="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600">View</a>
+                                    <a href="{% url 'delete_post' post.pk %}" class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600">Delete</a>
+                                </div>
+                            </td>
+                            <td class="border px-4 py-2">
+                                {% if post.status == 'accepted' %}
+                                <a href="{% url 'blog'  %}" class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600">{{ post.status }}</a>
+                                {% elif post.status == 'submitted' %}
+                                <span class="px-4 py-2 bg-blue-500 text-white rounded-lg">{{ post.status }}</span>
+                                {% elif post.status == 'rejected' %}
+                                <span class="px-4 py-2 bg-red-500 text-white rounded-lg">{{ post.status }}</span>
+                                {% elif post.status == 'reviewing' %}
+                                <span class="px-4 py-2 bg-yellow-500 text-white rounded-lg">{{ post.status }}</span>
+                                {% endif %}
+                            </td>
                         </tr>
-                        <!-- Add more rows for other posts -->
+                       {% endfor %}
+                       {% else %}
+                       <tr>
+                           <td colspan="6" class="border px-4 py-2 text-center">No posts exist.</td>
+                       </tr>
+                       {% endif %}
                     </tbody>
                 </table>
             </div>

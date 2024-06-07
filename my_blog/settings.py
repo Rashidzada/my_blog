@@ -27,6 +27,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'imagekit',
     'app',
 ]
 
@@ -119,3 +120,15 @@ MEDIA_ROOT = BASE_DIR / 'media'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 LOGOUT_REDIRECT_URL = '/'
+
+
+
+
+# Email settings
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'  # Use your SMTP server's address
+EMAIL_USE_TLS = True  # Use True for TLS, False for SSL
+EMAIL_PORT = 587  # SMTP port (commonly 587 for TLS, 465 for SSL)
+EMAIL_HOST_USER = 'rashidzada6@gmail.com'  # Your SMTP server username
+EMAIL_HOST_PASSWORD = 'stxf werm cyiq tlgn'  # Your SMTP server password
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER  # Default from email
